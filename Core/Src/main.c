@@ -22,7 +22,7 @@
 
 
 void SystemClock_Config(void);
-
+void LED_config(void);
 
 
 int main(void)
@@ -41,14 +41,60 @@ int main(void)
   // Initialize keypad
   keypad_init();
 
-  while (1)
-  {
 
+  LED_config();
 
-  }
+  int count;
+
+    /* USER CODE BEGIN WHILE */
+    while (1)
+    {
+  	  count = 0;
+  	  for(int countI =0; countI <16; countI++){
+  		  //GPIOC->ODR |= count;
+  		  GPIOC->ODR &= count;
+  		  GPIOC->ODR |= count;
+  		  count++;
+  		  for(int i=150000;i>0;i--);
+  	  }
+    }
 }
 
+void LED_config(void){
+	//
+	  // sets GPIOC Clock to high
 
+	    RCC->AHB2ENR |= (1<<RCC_AHB2ENR_GPIOCEN);
+
+
+	    //Sets first 8 bits to 10101010,
+	    GPIOC->MODER &= ~(GPIO_MODER_MODE0 |
+	  		  	 	 	GPIO_MODER_MODE1 |
+	  					GPIO_MODER_MODE2 |
+	  					GPIO_MODER_MODE3);
+
+	    GPIOC->MODER |= ((2 << GPIO_MODER_MODE0_Pos) |
+	  		  	  	   (2 << GPIO_MODER_MODE1_Pos) |
+	  				   (2 << GPIO_MODER_MODE2_Pos) |
+	  				   (2 << GPIO_MODER_MODE3_Pos));
+
+	    // Sets all OTYPE bits to 0
+	    GPIOC->OTYPER &= ~(GPIO_OTYPER_OT0 |
+	  		  	  	     GPIO_OTYPER_OT1 |
+	  					 GPIO_OTYPER_OT2 |
+	  					 GPIO_OTYPER_OT3);
+
+	    // Sets all SPEED and PUPD bits to 0
+	    GPIOC->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED0 |
+	  		  	  	  	  GPIO_OSPEEDR_OSPEED1 |
+	  					  GPIO_OSPEEDR_OSPEED2 |
+	  					  GPIO_OSPEEDR_OSPEED3);
+
+	    GPIOC->PUPDR &= ~(GPIO_PUPDR_PUPD0 |
+	  		  	  	  	GPIO_PUPDR_PUPD1 |
+	  					GPIO_PUPDR_PUPD2 |
+	  					GPIO_PUPDR_PUPD3);
+}
 
 /**
   * @brief System Clock Configuration
