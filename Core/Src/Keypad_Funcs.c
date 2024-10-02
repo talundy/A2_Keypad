@@ -9,7 +9,12 @@
 #include "Keypad_Funcs.h"
 #include "stm32l4xx_hal.h"
 
+#define POUND_PRESS 15
+#define STAR_PRESS 14
+#define NO_PRESS -1
 
+// number of columns of keyboard size
+#define KEYPAD_SIZE 3
 
 /*
  * Configure GPIO pins for the keypad.
@@ -84,8 +89,8 @@ int8_t calculate_button(int8_t row, int8_t col){
 		case 0: return 1;
 		case 1: return 4;
 		case 2: return 7;
-		case 3: return 15; 	// '*'
-		default: return -1;
+		case 3: return STAR_PRESS; 	// '*'
+		default: return NO_PRESS;
 		}
 	}
 	else if(col == 1){
@@ -94,7 +99,7 @@ int8_t calculate_button(int8_t row, int8_t col){
 		case 1: return 5;
 		case 2: return 8;
 		case 3: return 0;
-		default: return -1;
+		default: return NO_PRESS;
 		}
 	}
 	else if(col == 2){
@@ -102,21 +107,21 @@ int8_t calculate_button(int8_t row, int8_t col){
 		case 0: return 3;
 		case 1: return 6;
 		case 2: return 9;
-		case 3: return 16; 	// '#'
-		default: return -1;
+		case 3: return POUND_PRESS; 	// '#'
+		default: return NO_PRESS;
 		}
 	}
 	else if (col == 3){ 	// A, B, C, or D
 		switch(row){
-		case 0: return 11;	// A
-		case 1: return 12;	// B
-		case 2: return 13;	// C
-		case 4: return 14;	// D
-		default: return -1;
+		case 0: return 10;	// A
+		case 1: return 11;	// B
+		case 2: return 12;	// C
+		case 4: return 13;	// D
+		default: return NO_PRESS;
 		}
 
 	}
-	else return -1;
+	else return NO_PRESS;
 }
 
 /*
@@ -144,7 +149,9 @@ int8_t keypad_get_button(void){
 	if(!(GPIOA->IDR & (GPIO_IDR_ID0 | GPIO_IDR_ID1 | GPIO_IDR_ID2 | GPIO_IDR_ID3))){
 		int8_t col = 0;
 		// keep column 0 on. Turn off 1-3.
-		while (col <= 3){			// while in the valid range of columns
+		// IF
+		//
+		while (col < KEYBOARD_SIZE){			// while in the valid range of columns
 			light_column(col);		// light up the current column
 									// check if IDRs are equal to zero
 			int8_t row = (GPIOA->IDR & (GPIO_IDR_ID0 | GPIO_IDR_ID1 | GPIO_IDR_ID2 | GPIO_IDR_ID3));
@@ -166,8 +173,8 @@ int8_t keypad_get_button(void){
 
 	// if IDRs are equal to zero at the start of this subroutine
 	} else {
-		return -1;
+		return NO_PRESS;
 	}
 	// this code should be unreachable.
-	return -1;
+	return NO_PRESS;
 }
