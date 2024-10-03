@@ -8,6 +8,7 @@
 #ifndef INC_KEYPAD_FUNCS_H_
 #define INC_KEYPAD_FUNCS_H_
 
+#include <stdint.h>
 
 /*
  * Configure GPIO pins for the keypad.

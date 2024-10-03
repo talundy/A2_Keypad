@@ -23,6 +23,10 @@
 void keypad_init(void){
 	// Uses Port C[0-3] for columns, Port A[0-3] for rows. (4x4 matrix)
 
+	//set clocks
+	 RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOAEN);
+	 RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOCEN);
+
 	/*--- Set Port A pins 0-3 ---*/
 	// Set MODER to input mode [00]
 	GPIOA->MODER 	&= ~(GPIO_MODER_MODE0 |
@@ -34,7 +38,7 @@ void keypad_init(void){
 	GPIOA->PUPDR	&= ~(GPIO_PUPDR_PUPD0 |
 						GPIO_PUPDR_PUPD1 |
 						GPIO_PUPDR_PUPD2 |
-						GPIO_PUPDR_PUPD3);
+						GPIO_PUPDR_PUPD3);  // Pull Down Resistor not working for my board
 	// GPIOD->PUPDR set pull-down mode [10]
 	GPIOA->PUPDR 	|= ((2 << GPIO_PUPDR_PUPD0_Pos) |
 						(2 << GPIO_PUPDR_PUPD1_Pos) |
@@ -69,10 +73,10 @@ void keypad_init(void){
 						GPIO_PUPDR_PUPD2 |
 						GPIO_PUPDR_PUPD3);
 	// Set all column pins high
-	GPIOC->ODR 	|= ((1 << GPIO_ODR_OD0) |
-					(1 << GPIO_ODR_OD1) |
-					(1 << GPIO_ODR_OD2) |
-					(1 << GPIO_ODR_OD3));
+	GPIOC->ODR 	|= ((GPIO_ODR_OD0) |
+					(GPIO_ODR_OD1) |
+					(GPIO_ODR_OD2) |
+					(GPIO_ODR_OD3));
 	// done
 }
 
@@ -86,37 +90,37 @@ int8_t calculate_button(int8_t row, int8_t col){
 
 	if (col == 0){
 		switch(row){
-		case 0: return 1;
-		case 1: return 4;
-		case 2: return 7;
-		case 3: return STAR_PRESS; 	// '*'
+		case 1: return 1;
+		case 2: return 4;
+		case 4: return 7;
+		case 8: return STAR_PRESS; 	// '*'
 		default: return NO_PRESS;
 		}
 	}
 	else if(col == 1){
 		switch(row){
-		case 0: return 2;
-		case 1: return 5;
-		case 2: return 8;
-		case 3: return 0;
+		case 1: return 2;
+		case 2: return 5;
+		case 4: return 8;
+		case 8: return 0;
 		default: return NO_PRESS;
 		}
 	}
 	else if(col == 2){
 		switch(row){
-		case 0: return 3;
-		case 1: return 6;
-		case 2: return 9;
-		case 3: return POUND_PRESS; 	// '#'
+		case 1: return 3;
+		case 2: return 6;
+		case 4: return 9;
+		case 8: return POUND_PRESS; 	// '#'
 		default: return NO_PRESS;
 		}
 	}
 	else if (col == 3){ 	// A, B, C, or D
 		switch(row){
-		case 0: return 10;	// A
-		case 1: return 11;	// B
-		case 2: return 12;	// C
-		case 4: return 13;	// D
+		case 1: return 10;	// A
+		case 2: return 11;	// B
+		case 4: return 12;	// C
+		case 8: return 13;	// D
 		default: return NO_PRESS;
 		}
 
@@ -129,12 +133,30 @@ int8_t calculate_button(int8_t row, int8_t col){
  * This function is only valid for Port C Pins 0-3
  */
 void light_column(int8_t col){
+
+	//turns all columns off temporarily
+	GPIOC->ODR &= ~((GPIO_ODR_OD0) |
+					(GPIO_ODR_OD1) |
+					(GPIO_ODR_OD2) |
+					(GPIO_ODR_OD3));
+
 	switch (col){
-	case 0: GPIOC->ODR |= (1 << GPIO_ODR_OD0);
-	case 1: GPIOC->ODR |= (1 << GPIO_ODR_OD1);
-	case 2: GPIOC->ODR |= (1 << GPIO_ODR_OD2);
-	case 3: GPIOC->ODR |= (1 << GPIO_ODR_OD3);
-	default: GPIOC->ODR |= (1 << GPIO_ODR_OD0); 	// error: just lights up pin0
+	case 0:
+		GPIOC->ODR |= (GPIO_ODR_OD0);
+	 	break;
+	case 1:
+		GPIOC->ODR |= (GPIO_ODR_OD1);
+		break;
+	case 2:
+		GPIOC->ODR |= (GPIO_ODR_OD2);
+		break;
+	case 3:
+		GPIOC->ODR |= (GPIO_ODR_OD3);
+		break;
+	default: GPIOC->ODR |= ((GPIO_ODR_OD0) |
+							(GPIO_ODR_OD1) |
+							(GPIO_ODR_OD2) |
+							(GPIO_ODR_OD3)); break; 	// error: lights all columns
 	}
 }
 
@@ -146,22 +168,25 @@ void light_column(int8_t col){
 int8_t keypad_get_button(void){
 
 	// if IDRs are not equal to zero
-	if(!(GPIOA->IDR & (GPIO_IDR_ID0 | GPIO_IDR_ID1 | GPIO_IDR_ID2 | GPIO_IDR_ID3))){
+	//GPIO_IDR_ID0 | GPIO_IDR_ID1 | GPIO_IDR_ID2
+	if((GPIOA->IDR & (GPIO_IDR_ID0 | GPIO_IDR_ID1 | GPIO_IDR_ID2 | GPIO_IDR_ID3))){
+
 		int8_t col = 0;
 		// keep column 0 on. Turn off 1-3.
 		// IF
 		//
-		while (col < KEYBOARD_SIZE){			// while in the valid range of columns
+		while (col < KEYPAD_SIZE){			// while in the valid range of columns
 			light_column(col);		// light up the current column
 									// check if IDRs are equal to zero
-			int8_t row = (GPIOA->IDR & (GPIO_IDR_ID0 | GPIO_IDR_ID1 | GPIO_IDR_ID2 | GPIO_IDR_ID3));
 
-			if(!row){
+			int8_t row = GPIOA->IDR & (GPIO_IDR_ID0 | GPIO_IDR_ID1 | GPIO_IDR_ID2 | GPIO_IDR_ID3);
+
+			if(row){
 				// turn on all columns
-				GPIOC->ODR 	|= ((1 << GPIO_ODR_OD0) |
-									(1 << GPIO_ODR_OD1) |
-									(1 << GPIO_ODR_OD2) |
-									(1 << GPIO_ODR_OD3));
+				GPIOC->ODR 	|= ((1 << GPIO_ODR_OD0_Pos) |
+									(1 << GPIO_ODR_OD1_Pos) |
+									(1 << GPIO_ODR_OD2_Pos) |
+									(1 << GPIO_ODR_OD3_Pos));
 				// calculate & return correct value
 					return calculate_button(row, col);
 
@@ -173,8 +198,17 @@ int8_t keypad_get_button(void){
 
 	// if IDRs are equal to zero at the start of this subroutine
 	} else {
+		GPIOC->ODR 	|= ((1 << GPIO_ODR_OD0_Pos) |
+						(1 << GPIO_ODR_OD1_Pos) |
+						(1 << GPIO_ODR_OD2_Pos) |
+						(1 << GPIO_ODR_OD3_Pos));
 		return NO_PRESS;
 	}
 	// this code should be unreachable.
-	return NO_PRESS;
+	// end of while loop with no column press
+	GPIOC->ODR 	|= ((1 << GPIO_ODR_OD0_Pos) |
+							(1 << GPIO_ODR_OD1_Pos) |
+							(1 << GPIO_ODR_OD2_Pos) |
+							(1 << GPIO_ODR_OD3_Pos));
+			return NO_PRESS;
 }

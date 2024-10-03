@@ -52,8 +52,8 @@ int main(void)
   	  count = keypad_get_button();
 	  //GPIOC->ODR |= count;
   	  if(count != -1){
-		  GPIOB->ODR &= count; //sets LEDS to only light on count
-		  GPIOB->ODR |= count; // Not actually needed, but a fail safe just in case
+		  GPIOC->ODR &= ~(0xf << GPIO_ODR_OD10_Pos); //sets LEDS to only light on count
+		  GPIOC->ODR |= (count << GPIO_ODR_OD10_Pos); // Not actually needed, but a fail safe just in case
   	  }
     }
 }
@@ -61,38 +61,38 @@ int main(void)
 void LED_config(void){
 	//
 	// sets GPIOB Clock to high
-	// USES PORTS GPIO B [0-3] for LEDS
+	// USES PORTS GPIO C [10-13] for LEDS
 
-	    RCC->AHB2ENR |= (1<<RCC_AHB2ENR_GPIOBEN);
+//	RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOCEN);
 
 
-	    //Sets first 8 bits to 10101010,
-	    GPIOB->MODER &= ~(GPIO_MODER_MODE0 |
-	  		  	 	 	GPIO_MODER_MODE1 |
-	  					GPIO_MODER_MODE2 |
-	  					GPIO_MODER_MODE3);
+	  //Sets first 8 bits to 10101010,
+	  GPIOC->MODER &= ~(GPIO_MODER_MODE10 |
+			  	 	 	GPIO_MODER_MODE11 |
+						GPIO_MODER_MODE12 |
+						GPIO_MODER_MODE13);
 
-	    GPIOB->MODER |= ((2 << GPIO_MODER_MODE0_Pos) |
-	  		  	  	   (2 << GPIO_MODER_MODE1_Pos) |
-	  				   (2 << GPIO_MODER_MODE2_Pos) |
-	  				   (2 << GPIO_MODER_MODE3_Pos));
+	  GPIOC->MODER |= ((1 << GPIO_MODER_MODE10_Pos) |
+			  	  	   (1 << GPIO_MODER_MODE11_Pos) |
+					   (1 << GPIO_MODER_MODE12_Pos) |
+					   (1 << GPIO_MODER_MODE13_Pos));
 
-	    // Sets all OTYPE bits to 0
-	    GPIOB->OTYPER &= ~(GPIO_OTYPER_OT0 |
-	  		  	  	     GPIO_OTYPER_OT1 |
-	  					 GPIO_OTYPER_OT2 |
-	  					 GPIO_OTYPER_OT3);
+	  // Sets all OTYPE bits to 0
+	  GPIOC->OTYPER &= ~(GPIO_OTYPER_OT10 |
+			  	  	     GPIO_OTYPER_OT11 |
+						 GPIO_OTYPER_OT12 |
+						 GPIO_OTYPER_OT13);
 
-	    // Sets all SPEED and PUPD bits to 0
-	    GPIOB->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED0 |
-	  		  	  	  	  GPIO_OSPEEDR_OSPEED1 |
-	  					  GPIO_OSPEEDR_OSPEED2 |
-	  					  GPIO_OSPEEDR_OSPEED3);
+	  // Sets all SPEED and PUPD bits to 0
+	  GPIOC->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED10 |
+			  	  	  	  GPIO_OSPEEDR_OSPEED11 |
+						  GPIO_OSPEEDR_OSPEED12 |
+						  GPIO_OSPEEDR_OSPEED13);
 
-	    GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPD0 |
-	  		  	  	  	GPIO_PUPDR_PUPD1 |
-	  					GPIO_PUPDR_PUPD2 |
-	  					GPIO_PUPDR_PUPD3);
+	  GPIOC->PUPDR &= ~(GPIO_PUPDR_PUPD10 |
+			  	  	  	GPIO_PUPDR_PUPD11 |
+						GPIO_PUPDR_PUPD12 |
+						GPIO_PUPDR_PUPD13);
 }
 
 /**
