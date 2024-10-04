@@ -21,7 +21,7 @@
  * Set all columns = 1.
  */
 void keypad_init(void){
-	// Uses Port C[0-3] for columns, Port A[0-3] for rows. (4x4 matrix)
+	// Uses Port C[0-3] for columns, Port A[4-7] for rows. (4x4 matrix)
 
 	//set clocks
 	 RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOAEN);
@@ -29,21 +29,21 @@ void keypad_init(void){
 
 	/*--- Set Port A pins 0-3 ---*/
 	// Set MODER to input mode [00]
-	GPIOA->MODER 	&= ~(GPIO_MODER_MODE0 |
-						GPIO_MODER_MODE1 |
-						GPIO_MODER_MODE2 |
-						GPIO_MODER_MODE3);
+	GPIOA->MODER 	&= ~(GPIO_MODER_MODE4 |
+						GPIO_MODER_MODE5 |
+						GPIO_MODER_MODE6 |
+						GPIO_MODER_MODE7);
 
 	// Clear PUPDR bits
-	GPIOA->PUPDR	&= ~(GPIO_PUPDR_PUPD0 |
-						GPIO_PUPDR_PUPD1 |
-						GPIO_PUPDR_PUPD2 |
-						GPIO_PUPDR_PUPD3);  // Pull Down Resistor not working for my board
+	GPIOA->PUPDR	&= ~(GPIO_PUPDR_PUPD4 |
+						GPIO_PUPDR_PUPD5 |
+						GPIO_PUPDR_PUPD6 |
+						GPIO_PUPDR_PUPD7);  // Pull Down Resistor not working for my board
 	// GPIOD->PUPDR set pull-down mode [10]
-	GPIOA->PUPDR 	|= ((2 << GPIO_PUPDR_PUPD0_Pos) |
-						(2 << GPIO_PUPDR_PUPD1_Pos) |
-						(2 << GPIO_PUPDR_PUPD2_Pos) |
-						(2 << GPIO_PUPDR_PUPD3_Pos));
+	GPIOA->PUPDR 	|= ((2 << GPIO_PUPDR_PUPD4_Pos) |
+						(2 << GPIO_PUPDR_PUPD5_Pos) |
+						(2 << GPIO_PUPDR_PUPD6_Pos) |
+						(2 << GPIO_PUPDR_PUPD7_Pos));
 
 
 	/*--- Set Port C pins 0-3 ---*/
@@ -169,7 +169,7 @@ int8_t keypad_get_button(void){
 
 	// if IDRs are not equal to zero
 	//GPIO_IDR_ID0 | GPIO_IDR_ID1 | GPIO_IDR_ID2
-	if((GPIOA->IDR & (GPIO_IDR_ID0 | GPIO_IDR_ID1 | GPIO_IDR_ID2 | GPIO_IDR_ID3))){
+	if((GPIOA->IDR & (GPIO_IDR_ID4 | GPIO_IDR_ID5 | GPIO_IDR_ID6 | GPIO_IDR_ID7))){
 
 		int8_t col = 0;
 		// keep column 0 on. Turn off 1-3.
@@ -179,7 +179,7 @@ int8_t keypad_get_button(void){
 			light_column(col);		// light up the current column
 									// check if IDRs are equal to zero
 
-			int8_t row = GPIOA->IDR & (GPIO_IDR_ID0 | GPIO_IDR_ID1 | GPIO_IDR_ID2 | GPIO_IDR_ID3);
+			int8_t row = (GPIOA->IDR & (GPIO_IDR_ID4 | GPIO_IDR_ID5 | GPIO_IDR_ID6 | GPIO_IDR_ID7)) >> GPIO_IDR_ID4_Pos;
 
 			if(row){
 				// turn on all columns
